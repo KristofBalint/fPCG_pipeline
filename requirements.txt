@@ -1,0 +1,13 @@
+numpy
+pandas
+scikit-learn
+imbalanced-learn
+xgboost
+scipy
+matplotlib
+seaborn
+scikit-posthocs
+# pyPCG is distributed as pyPCG_toolbox on PyPI
+pyPCG_toolbox
+# hsmmlearn is not on PyPI, install from GitHub
+git+https://github.com/jvkersch/hsmmlearn@master
