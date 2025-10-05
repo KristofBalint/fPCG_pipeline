@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fPCG_pipeline"
+version = "0.1.0"
+description = "Tools for fetal signal processing and Machine learning"
+authors = [
+    {name="Bálint Kristóf"}
+]
+maintainers=[
+    {name="Bálint Kristóf", email="balin.kristof.99@gmail.com"}
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "imbalanced-learn",
+    "xgboost",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "scikit-posthocs",
+    "pyPCG_toolbox",
+    "hsmmlearn @ git+https://github.com/jvkersch/hsmmlearn@master",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
