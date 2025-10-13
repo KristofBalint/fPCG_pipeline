@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fPCG_pipeline"
 version = "0.1.0"
-description = "Tools for fetal signal processing and Machine learning"
+description = "Tools for fetal signal processing and Machine Learning"
 authors = [
     {name="Bálint Kristóf"}
 ]
