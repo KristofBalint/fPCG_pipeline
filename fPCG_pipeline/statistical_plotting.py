@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from preprocessing import *
+from .preprocessing import *
 from scipy import stats
 import scikit_posthocs as sp
 

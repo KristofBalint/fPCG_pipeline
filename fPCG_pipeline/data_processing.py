@@ -1,7 +1,7 @@
 import pyPCG
 import numpy as np
 import time
-from preprocessing import *
+from .preprocessing import *
 import pandas as pd
 
 def process(sound_with_data, categorize=False, save=True):
