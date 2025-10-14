@@ -13,7 +13,7 @@ def remove_overlap(features_df, olap_rate):
     '''
     # start_index = features_df[features_df["Pregnancy term category"] != '35-nél korábbi'].index[0]
     num_rows = int((len(features_df)) / olap_rate)
-    indices_to_select = [0 + i * olap_rate for i in range(num_rows)]
+    indices_to_select = [0 + i * int(olap_rate) for i in range(num_rows)]
     non_overlapping = features_df.iloc[indices_to_select]
     non_overlapping = non_overlapping.reset_index(drop=True)
     return non_overlapping
@@ -32,8 +32,12 @@ def apply_category(non_overlapping):
         categorize_age)
 
 
-def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh=0.3,fmt=".1f"):
+def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh=0.3
+                            ,fmt=".1f",ttl_fsize=20,tck_fsize=16):
     '''
+    :param tck_fsize: tick size
+    :param ttl_fsize: title font size
+    :param column_renames: Renaming columns in order to reduce the size of the figure
     :param non_overlapping: input dataframe
     :param feats_to_drop: features not visualised in the matrix
     :param thresh: only features above the threshold will be visible
@@ -48,17 +52,18 @@ def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh
         feats_to_drop, axis=1)
 
     corr_matrix = corr_matrix.corr()
-    corr_matrix = corr_matrix[abs(corr_matrix) >= 0.3]
+    corr_matrix = corr_matrix[abs(corr_matrix) >= thresh]
     plt.figure(figsize=(12, 10))
-    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".1f")
-    plt.title('Correlation Matrix')
-    plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels
-    plt.yticks(rotation=15, ha='right')
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=fmt)
+    plt.title('Correlation Matrix', fontsize=ttl_fsize)
+    plt.xticks(rotation=45, ha='right',fontsize=tck_fsize)  # Rotate x-axis labels
+    plt.yticks(rotation=15, ha='right',fontsize=tck_fsize)
     plt.show()
 
-def plot_viol(non_overlapping, X , ys):
+def plot_viol(non_overlapping, X , ys,x_rename,lbl_fsize=18,tck_fsize=12):
     '''
     Modular implementation of making violin plots for features.
+    :param x_rename: renaming the data from 0 1 to something more understandable
     :param non_overlapping: input dataframe
     :param X: the variable we want to compare the distributions of the classes
     :param ys: for what features we compare
@@ -69,6 +74,10 @@ def plot_viol(non_overlapping, X , ys):
     for i in range(len(ys)):
         plt.subplot(1, len(ys), i+1)
         sns.violinplot(data=non_overlapping,x=X,y=ys[i])
+        plt.xlabel(X, fontsize=lbl_fsize)
+        plt.ylabel(ys[i], fontsize=lbl_fsize)
+        plt.xticks(x_rename[0],x_rename[1],fontsize=tck_fsize)
+        plt.yticks(fontsize=tck_fsize)
         data = [non_overlapping[ys[i]][non_overlapping[X] == g]  for g in groups]
         H, p = stats.kruskal(*data)
         print(
