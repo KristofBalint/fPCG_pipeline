@@ -32,7 +32,7 @@ def apply_category(non_overlapping):
         categorize_age)
 
 
-def plot_correlation_matrix(non_overlapping,feats_to_drop, thresh=0.3,fmt=".1f"):
+def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh=0.3,fmt=".1f"):
     '''
     :param non_overlapping: input dataframe
     :param feats_to_drop: features not visualised in the matrix
@@ -40,16 +40,20 @@ def plot_correlation_matrix(non_overlapping,feats_to_drop, thresh=0.3,fmt=".1f")
     :param fmt: how many digits of the correlation score should be displayed
     :return: plots a correlation matrix
     '''
-    corr_matrix = non_overlapping.copy()
+
+
+    corr_matrix = non_overlapping.copy().rename(columns=column_renames)
 
     corr_matrix = corr_matrix.drop(
         feats_to_drop, axis=1)
 
     corr_matrix = corr_matrix.corr()
-    corr_matrix = corr_matrix[abs(corr_matrix) >= thresh]
+    corr_matrix = corr_matrix[abs(corr_matrix) >= 0.3]
     plt.figure(figsize=(12, 10))
-    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=fmt)
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".1f")
     plt.title('Correlation Matrix')
+    plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels
+    plt.yticks(rotation=15, ha='right')
     plt.show()
 
 def plot_viol(non_overlapping, X , ys):
