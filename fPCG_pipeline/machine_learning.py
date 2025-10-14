@@ -103,7 +103,8 @@ def train_and_evaluate(X, y, model_conf,
                        global_use_smote=True,
                        test_size=0.2,
                        random_state_base=0,
-                       mean_fpr_grid=None):
+                       mean_fpr_grid=None,
+                       verbose=False):
     """
     model_conf: dict with keys:
         - 'estimator': sklearn-like estimator (unfitted)
@@ -200,6 +201,8 @@ def train_and_evaluate(X, y, model_conf,
         metrics['specificity'].append(specificity_score(y_test, y_pred))
         metrics['precision'].append(
             precision_score(y_test, y_pred, zero_division=0))
+        if verbose:
+            print(f"{rs}th bootstrap done")
 
     # summarize
     results = {

@@ -33,7 +33,7 @@ def apply_category(non_overlapping):
 
 
 def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh=0.3
-                            ,fmt=".1f",ttl_fsize=20,tck_fsize=16):
+                            ,fmt=".1f",ttl_fsize=20,tck_fsize=16,xrot=45,yrot=15):
     '''
     :param tck_fsize: tick size
     :param ttl_fsize: title font size
@@ -56,8 +56,8 @@ def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh
     plt.figure(figsize=(12, 10))
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=fmt)
     plt.title('Correlation Matrix', fontsize=ttl_fsize)
-    plt.xticks(rotation=45, ha='right',fontsize=tck_fsize)  # Rotate x-axis labels
-    plt.yticks(rotation=15, ha='right',fontsize=tck_fsize)
+    plt.xticks(rotation=xrot, ha='right',fontsize=tck_fsize)  # Rotate x-axis labels
+    plt.yticks(rotation=yrot, ha='right',fontsize=tck_fsize)
     plt.show()
 
 def plot_viol(non_overlapping, X , ys,x_rename,lbl_fsize=18,tck_fsize=12):
