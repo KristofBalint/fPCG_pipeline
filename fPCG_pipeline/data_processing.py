@@ -165,6 +165,10 @@ def read_data(filename, database):
             "low fetal growth"
         )
         features_df["Clinical history"] = features_df[
+            "Clinical history"].replace(
+            "Admitted in hospital due to high fetal heart rate",
+            "High fetal heart rate")
+        features_df["Clinical history"] = features_df[
             "Clinical history"].str.replace("Twins \(boys\)", "PROM",
                                             regex=True)
         #Only twin boys where they wrote "Twins \(boys\)" in the clinical history,
