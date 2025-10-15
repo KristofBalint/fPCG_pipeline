@@ -1,4 +1,4 @@
-import pyPCG
+import pyPCG, pyPCG.io, pyPCG.segment, pyPCG.stats, pyPCG.features
 import numpy as np
 import time
 from .preprocessing import *

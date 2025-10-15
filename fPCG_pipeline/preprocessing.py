@@ -135,7 +135,8 @@ import numpy.typing as npt
 def peak_spread_optimized(
     start: npt.NDArray[np.int_],
     end: npt.NDArray[np.int_],
-    envelope,
+    envelope_data: npt.NDArray[np.float64],  # Pass the data array directly
+    fs: float,  # Pass the sampling rate
     factor: float = 0.7
 ) -> npt.NDArray[np.int_]:
     """Optimized peak spread calculation.
@@ -143,33 +144,30 @@ def peak_spread_optimized(
     Args:
         start (np.ndarray): start times in samples
         end (np.ndarray): end times in samples
-        envelope (pcg_signal): input envelope signal
+        envelope_data (np.ndarray): The data array from the envelope signal
+        fs (float): The sampling rate of the envelope signal
         factor (float, optional): percentage of total area. Defaults to 0.7.
 
     Returns:
         np.ndarray: time difference between the beginning and end of the percentage area in ms
     """
-    start, end = pyPCG.features._check_start_end(start, end)
-    ret = np.zeros(len(start), dtype=np.int_)  # Pre-allocate output array
+    ret = np.zeros(len(start), dtype=np.float64)
 
     for i in range(len(start)):
         s, e = start[i], end[i]
-        win = envelope.data[s:e]  # Extract segment
-        total_area = np.sum(win) * factor  # Compute threshold
+        win = envelope_data[s:e]  # Use the data array
+        total_area = np.sum(win) * factor
 
-        peak = np.argmax(win)  # Find peak index
-        power_cumsum = np.cumsum(win)  # Cumulative sum of power
+        peak = np.argmax(win)
+        power_cumsum = np.cumsum(win)
 
-        # Find left boundary
         left_idx = np.searchsorted(power_cumsum, power_cumsum[peak] - total_area, side="left")
-        # Find right boundary
         right_idx = np.searchsorted(power_cumsum, power_cumsum[peak] + total_area, side="right")
 
-        spread = right_idx - left_idx  # Spread in samples
-        ret[i] = spread / envelope.fs * 1000  # Convert to milliseconds
+        spread = right_idx - left_idx
+        ret[i] = spread / fs * 1000  # Use the passed fs
 
     return ret
-
 
 def categorize_pregnancy_term(term):
     '''
