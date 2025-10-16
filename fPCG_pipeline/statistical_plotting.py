@@ -7,6 +7,7 @@ from matplotlib.transforms import Transform
 from matplotlib.scale import ScaleBase
 from matplotlib import scale as mscale
 import scipy
+import pyPCG.preprocessing
 
 def remove_overlap(features_df, olap_rate):
     '''
@@ -212,6 +213,12 @@ def spectrogram_and_raw_signal(data,start_time,end_time,fs, NFFT_val = 2048,
     plt.show()
 
 def plot_freq_spectrogram(data,filtered=False):
+    '''
+    Plots the spectrogram of the raw signal
+    :param data: raw signal
+    :param filtered: if it needs filtering
+    :return:
+    '''
     if filtered:
         denoised=pyPCG.preprocessing.wt_denoise_sth(data)
         filtered=pyPCG.preprocessing.filter(denoised,filt_ord=4,filt_cutfreq=350,filt_type='LP')
