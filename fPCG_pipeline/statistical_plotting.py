@@ -3,6 +3,10 @@ import seaborn as sns
 from .preprocessing import *
 from scipy import stats
 import scikit_posthocs as sp
+from matplotlib.transforms import Transform
+from matplotlib.scale import ScaleBase
+from matplotlib import scale as mscale
+import scipy
 
 def remove_overlap(features_df, olap_rate):
     '''
@@ -94,3 +98,140 @@ def pairplot(non_overlapping,feat_list,hue):
     :return: plots a pairplot
     '''
     sns.pairplot(non_overlapping[feat_list], hue=hue)
+
+
+class MelTransform(Transform):
+    """
+    Transforms frequency(Hz) to mel scale.
+    """
+    input_dims = 1
+    output_dims = 1
+    is_separable = True
+
+    def transform_non_affine(self, a):
+        return 2595 * np.log10(1 + a / 700.0)
+
+    def inverted(self):
+        return InverseMelTransform()
+
+class InverseMelTransform(Transform):
+    """
+    Inverts Mel scale back to frequency (Hz).
+    """
+    input_dims = 1
+    output_dims = 1
+    is_separable = True
+
+    def transform_non_affine(self, a):
+
+        return 700.0 * (10**(a / 2595.0) - 1)
+
+    def inverted(self):
+        return MelTransform()
+
+
+class MelScale(ScaleBase):
+    """
+    Matplotlib scale class for Mel scale.
+    """
+    name = 'mel' # This name is used in set_yscale('mel')
+
+    def __init__(self, axis, **kwargs):
+        ScaleBase.__init__(self, axis)
+
+    def get_transform(self):
+        return MelTransform()
+
+    def set_default_locators_and_formatters(self, axis):
+        pass # The default locators are not good for mel scale
+
+def spectrogram_and_raw_signal(data,start_time,end_time,fs, NFFT_val = 2048,
+                               ymin_freq = 1, ymax_freq = 8000,
+                               vmin_dB = -30, vmax_dB = 50,cmap='jet'  ):
+    '''
+    Displays a segment of a raw signal and its spectrogram
+    :param data: sound data
+    :param start_time: starting time of the plot
+    :param end_time: ending time of the plot
+    :param fs: frequency
+    :param NFFT_val: N for the fast Fourier transfrom
+    :param ymin_freq: minimum freqency for the displayed spectrogram
+    :param ymax_freq: maximum freqency for the displayed spectrogram
+    :param vmin_dB: minimum dB for the displayed spectrogram
+    :param vmax_dB: maximum dB for the displayed spectrogram
+    :param cmap: The colormap for the spectrogram
+    :return:
+    '''
+    mscale.register_scale(MelScale)
+    start_sample = int(start_time * fs)
+    end_sample = int(end_time * fs)
+    sliced_sound_data = data[start_sample:end_sample, 0]
+
+    fig, axes = plt.subplots(2, 1, figsize=(20, 12),
+                             gridspec_kw={'height_ratios': [1, 1]})
+
+
+    window_val = NFFT_val
+    noverlap_val = NFFT_val // 2048
+
+    time_axis_seconds = np.linspace(start_time, end_time,
+                                    len(sliced_sound_data), endpoint=False)
+    im = axes[0].specgram(
+        sliced_sound_data,
+        Fs=fs,
+        NFFT=NFFT_val,
+        noverlap=noverlap_val,
+        window=np.hanning(window_val),  # Hann window
+        scale='dB',  # Intensity scale in dB
+        vmin=vmin_dB,
+        vmax=vmax_dB,
+        cmap=cmap,
+    )
+    # axes[0].set_xlim(start_time, end_time)
+    axes[0].set_yscale('mel')
+    axes[0].set_ylim(ymin=ymin_freq, ymax=ymax_freq)
+    axes[0].tick_params(axis='both', which='major', labelsize=18)
+    axes[0].set_xlabel("Time (s)", fontsize=25)
+    axes[0].set_ylabel("Frequency (Hz)", fontsize=25)
+    axes[0].set_title(
+        f"Spectrogram of fPCG record ({start_time}-{end_time} seconds)",
+        fontsize=30)
+
+
+
+    # Plot the sliced sound data on the second subplot
+
+    axes[1].plot(time_axis_seconds, sliced_sound_data)
+    axes[1].set_xlim(start_time, end_time)
+    axes[1].tick_params(axis='both', which='major', labelsize=18)
+    axes[1].set_xlabel("Time (seconds)", fontsize=25)
+    axes[1].set_ylabel("Amplitude (n.u.)", fontsize=25)
+    axes[1].set_title("Raw signal", fontsize=30)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_freq_spectrogram(data,filtered=False):
+    if filtered:
+        denoised=pyPCG.preprocessing.wt_denoise_sth(data)
+        filtered=pyPCG.preprocessing.filter(denoised,filt_ord=4,filt_cutfreq=350,filt_type='LP')
+        data=pyPCG.preprocessing.filter(filtered,filt_ord=4,filt_cutfreq=100,filt_type='HP')
+        fs = filtered.fs
+    else:
+        fs=data.fs
+    # Perform Fast Fourier Transform (FFT)
+    fft_result = scipy.fft.fft(data.data)
+    frequencies = scipy.fft.fftfreq(len(data.data), 1 / fs)
+
+    # Take the absolute value of the FFT result and consider only the positive frequencies
+    fft_magnitude = np.abs(fft_result)[:len(fft_result) // 2]
+    positive_frequencies = frequencies[:len(frequencies) // 2]
+
+    # Plot the frequency spectrum
+    plt.figure(figsize=(20, 6))
+    plt.plot(positive_frequencies, fft_magnitude)
+    plt.xlabel("Frequency (Hz)", fontsize=20)
+    plt.ylabel("Magnitude", fontsize=20)
+    plt.title("Frequency Spectrum of Raw fPCG Record", fontsize=20)
+    plt.grid(True)
+    plt.show()
