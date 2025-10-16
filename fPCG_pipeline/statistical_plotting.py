@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from .preprocessing import *
+from .preprocessing import categorize_pregnancy_term, categorize_bmi, categorize_age
+import numpy as np
 from scipy import stats
 import scikit_posthocs as sp
 from matplotlib.transforms import Transform
