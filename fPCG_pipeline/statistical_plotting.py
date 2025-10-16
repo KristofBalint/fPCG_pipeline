@@ -24,9 +24,8 @@ def remove_overlap(features_df, olap_rate):
     non_overlapping = non_overlapping.reset_index(drop=True)
     return non_overlapping
 
-def apply_category(non_overlapping):
+def apply_category(non_overlapping):#still wrong
     '''
-
     :param non_overlapping: input dataframe
     :return: dataframe with categorized metadata
     '''
