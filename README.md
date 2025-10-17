@@ -37,3 +37,8 @@ git clone https://github.com/KristofBalint/fPCG_pipeline.git
 cd fPCG_pipeline
 pip install -e .
 ```
+
+# Demonstration
+
+The fPCG_pipeline_online_demo.ipynb shows how to use this package. It can be used in google colab, or any python environment.
+

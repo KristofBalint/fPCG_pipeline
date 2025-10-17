@@ -345,7 +345,7 @@ def plot_perm_importance(
     importances_plot = df_plot["Importance"].values[::-1]
     std_plot = df_plot["Std"].values[::-1]
 
-    ax.barh(y=features_plot, width=importances_plot, xerr=std_plot, capsize=4)
+    ax.barh(y=features_plot, width=importances_plot, xerr=std_plot, capsize=5)
     ax.set_xlabel("Permutation importance (mean)")
     ax.set_ylabel("Feature")
     if title is None:
