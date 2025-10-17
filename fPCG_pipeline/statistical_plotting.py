@@ -144,7 +144,7 @@ def spectrogram_and_raw_signal(data,start_time,end_time,fs, NFFT_val = 2048,
     :param data: sound data
     :param start_time: starting time of the plot
     :param end_time: ending time of the plot
-    :param fs: frequency
+    :param fs: sampling frequency
     :param NFFT_val: N for the fast Fourier transfrom
     :param ymin_freq: minimum freqency for the displayed spectrogram
     :param ymax_freq: maximum freqency for the displayed spectrogram

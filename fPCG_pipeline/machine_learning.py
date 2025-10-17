@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 def prepare_X_y(features_df,
                 drop_target_columns,
                 drop_meta_columns=None,
-                required_features=None,
+                non_required_features=None,
                 outcome_def=None):
     """
     outcome_def: dict with:
@@ -50,8 +50,8 @@ def prepare_X_y(features_df,
         df_X[column] = df_X[column].astype(int)
 
     # Drop rows missing critical features (if provided)
-    if required_features:
-        existing_required = [c for c in required_features if c in df_X.columns]
+    if non_required_features:
+        existing_required = [c for c in non_required_features if c in df_X.columns]
         if existing_required:
             df_X = df_X.dropna(subset=existing_required)
 
@@ -250,10 +250,8 @@ def plot_perm_importance(
     estimator :
         A fitted sklearn estimator (must support predict or predict_proba as used by scoring).
         If `fit_clone_if_unfitted=True`, a clone will be fitted on (X, y) if estimator is not fitted.
-    X : DataFrame or ndarray
-        Feature matrix (columns used as feature names if DataFrame).
-    y : Series or ndarray
-        Target labels.
+    X : DataFrame or ndarray Feature matrix (columns used as feature names if DataFrame).
+    y : Series or ndarray Target labels.
     n_repeats : int
         Number of permutation repeats (passed to permutation_importance).
     random_state : int
@@ -269,7 +267,8 @@ def plot_perm_importance(
     scoring : str or callable, optional
         Scoring to use (passed to permutation_importance). If None, uses estimator default scorer.
     fit_clone_if_unfitted : bool
-        If True and the estimator is not fitted, the function will fit a clone on (X, y) before computing importance.
+        If True and the estimator is not fitted, the function will fit a clone
+        on (X, y) before computing importance.
         If False and estimator is not fitted, raises a NotFittedError.
     fit_kwargs : dict, optional
         Extra kwargs passed to estimator.fit when fitting the clone.
