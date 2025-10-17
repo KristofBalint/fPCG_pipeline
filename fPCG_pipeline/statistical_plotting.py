@@ -55,7 +55,8 @@ def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh
     plt.yticks(rotation=yrot, ha='right',fontsize=tck_fsize)
     plt.show()
 
-def plot_viol(non_overlapping, X , ys,x_rename,lbl_fsize=18,tck_fsize=12):
+def plot_viol(non_overlapping, X , ys,x_rename,lbl_fsize=18,tck_fsize=12,
+              trim = False, q_bounds = [0.25, 0.75]):
     '''
     Modular implementation of making violin plots for features.
     :param x_rename: renaming the data from 0 1 to something more understandable
@@ -65,15 +66,21 @@ def plot_viol(non_overlapping, X , ys,x_rename,lbl_fsize=18,tck_fsize=12):
     :return:plots violins, and prints results of Kruskal-Wallis and Dunn post-hoc tests
     '''
     plt.figure(figsize=(7*len(ys), 8))
-    groups=non_overlapping[X].unique()
+    for_plot=non_overlapping.copy()
+    groups=for_plot[X].unique()
     for i in range(len(ys)):
         plt.subplot(1, len(ys), i+1)
-        sns.violinplot(data=non_overlapping,x=X,y=ys[i])
+        if trim:
+            q1=for_plot[ys[i]].quantile(q_bounds[0])
+            q3=for_plot[ys[i]].quantile(q_bounds[1])
+            iqr=q3-q1
+            for_plot=for_plot[(for_plot[ys[i]] >= q1 - 1.5*iqr)&(for_plot[ys[i]]<=q3 + 1.5*iqr)]
+        sns.violinplot(data=for_plot,x=X,y=ys[i])
         plt.xlabel(X, fontsize=lbl_fsize)
         plt.ylabel(ys[i], fontsize=lbl_fsize)
         plt.xticks(x_rename[0],x_rename[1],fontsize=tck_fsize)
         plt.yticks(fontsize=tck_fsize)
-        data = [non_overlapping[ys[i]][non_overlapping[X] == g]  for g in groups]
+        data = [for_plot[ys[i]][for_plot[X] == g]  for g in groups]
         H, p = stats.kruskal(*data)
         print(
             f"Kruskal-Wallis H test for {ys[i]} rate: H = {H:.2f}, p-value = {p:.3f}")
