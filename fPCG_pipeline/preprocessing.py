@@ -176,13 +176,13 @@ def categorize_pregnancy_term(term):
     :return: a string representing categories
     '''
     if term <= 35:
-        return "35-nél korábbi"
+        return "35>"
     elif 36 <= term <= 37:
         return "36-37"
     elif 38 <= term <= 39:
         return "38-39"
     else:
-        return "40-nél későbbi"
+        return "40<"
 
 def categorize_bmi(bmi):
     '''
@@ -191,13 +191,13 @@ def categorize_bmi(bmi):
     :return: a string representing categories
     '''
     if bmi<=26.275:
-        return "26-nál kisebb"
+        return "26>"
     elif 26.275<=bmi<=28.65:
         return "26-28"
     elif 28.65<=bmi<=31.6:
         return "28-31"
     else:
-        return "31-nél nagyobb"
+        return "31<"
 
 def categorize_age(age):
     '''
@@ -206,10 +206,25 @@ def categorize_age(age):
     :return: a string representing categories
     '''
     if age<=25:
-        return "25-nál fiatalabb"
+        return "25>"
     elif 25<=age<=29:
         return "25-29"
     elif 29<=age<=33:
         return "25-33"
     else:
-        return "33-nál idősebb"
+        return "33<"
+
+
+def apply_category(non_overlapping):  # still wrong
+    '''
+    :param non_overlapping: input dataframe
+    :return: dataframe with categorized metadata
+    '''
+    non_overlapping['Pregnancy term category'] = non_overlapping[
+        'Pregnancy term category'].apply(categorize_pregnancy_term)
+    non_overlapping['BMI category'] = non_overlapping['BMI category'].apply(
+        categorize_bmi)
+    non_overlapping['Age category'] = non_overlapping['Age category'].apply(
+        categorize_age)
+
+    return non_overlapping

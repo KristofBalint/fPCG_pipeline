@@ -13,6 +13,12 @@ from xgboost import XGBClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 import warnings
+from typing import Optional, Union
+import matplotlib.pyplot as plt
+from sklearn.inspection import permutation_importance
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
+
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -220,43 +226,134 @@ def train_and_evaluate(X, y, model_conf,
     }
     return results
 
+def plot_perm_importance(
+    estimator,
+    X: Union[pd.DataFrame, np.ndarray],
+    y: Union[pd.Series, np.ndarray],
+    n_repeats: int = 10,
+    random_state: int = 42,
+    n_jobs: int = -1,
+    n_top: Optional[int] = None,
+    figsize: tuple = (10, 6),
+    ax: Optional[plt.Axes] = None,
+    scoring: Optional[str] = None,
+    fit_clone_if_unfitted: bool = False,
+    fit_kwargs: Optional[dict] = None,
+    title: Optional[str] = None,
+    return_df: bool = False,
+):
+    """
+    Compute permutation importance and plot a horizontal bar chart with error bars.
 
+    Parameters
+    ----------
+    estimator :
+        A fitted sklearn estimator (must support predict or predict_proba as used by scoring).
+        If `fit_clone_if_unfitted=True`, a clone will be fitted on (X, y) if estimator is not fitted.
+    X : DataFrame or ndarray
+        Feature matrix (columns used as feature names if DataFrame).
+    y : Series or ndarray
+        Target labels.
+    n_repeats : int
+        Number of permutation repeats (passed to permutation_importance).
+    random_state : int
+        Random seed for permutation_importance.
+    n_jobs : int
+        Jobs for permutation_importance.
+    n_top : Optional[int]
+        If set, only plot the top-n features (by mean importance).
+    figsize : tuple
+        Figure size for matplotlib.
+    ax : Optional[plt.Axes]
+        If provided, draw on this Axes; otherwise create a new figure.
+    scoring : str or callable, optional
+        Scoring to use (passed to permutation_importance). If None, uses estimator default scorer.
+    fit_clone_if_unfitted : bool
+        If True and the estimator is not fitted, the function will fit a clone on (X, y) before computing importance.
+        If False and estimator is not fitted, raises a NotFittedError.
+    fit_kwargs : dict, optional
+        Extra kwargs passed to estimator.fit when fitting the clone.
+    title : str, optional
+        Title for the plot. If None a default title is used.
+    return_df : bool
+        If True, return the importance dataframe in addition to plotting.
 
-'''
-# ==========================
-# Example config 
-# ==========================
-tasks = {
-    "high_fhr": {"target": "High fetal heart rate", "use_smote": True},
-    "preeclampsia": {"target": "Preeclampsia", "use_smote": True},
-    "prom": {"target": "PROM", "use_smote": True},
-    "iugr": {"target": "low fetal growth", "use_smote": False},
-    # example: no SMOTE for this task
-    "preg_term": {"target": "Pregnancy term category",
-                  "transform": categorize_pregnancy_term,
-                  "dummy": "35-nél korábbi", "use_smote": False},
-    "gender": {"target": "Baby gender", "dummy": "B", "use_smote": False}
-}
+    Returns
+    -------
+    pd.DataFrame (optional)
+        DataFrame containing Feature, Importance (mean), and Std columns (returned if return_df=True).
+    """
+    # Prepare fit kwargs
+    fit_kwargs = fit_kwargs or {}
 
-# Models: adjust hyperparams as you like. Use skip_smote=True for models that you prefer not to SMOTE.
+    # If X is DataFrame, preserve column names; otherwise generate names
+    if isinstance(X, pd.DataFrame):
+        feature_names = X.columns.tolist()
+    else:
+        feature_names = [f"f{i}" for i in range(X.shape[1])]
 
+    # Ensure estimator is fitted (or fit a clone if requested)
+    try:
+        check_is_fitted(estimator)
+        used_estimator = estimator  # already fitted; use as-is
+    except (NotFittedError, Exception):
+        if fit_clone_if_unfitted:
+            used_estimator = clone(estimator)
+            used_estimator.fit(X, y, **fit_kwargs)
+        else:
+            raise NotFittedError(
+                "The provided estimator does not appear to be fitted. "
+                "Either provide a fitted estimator or set fit_clone_if_unfitted=True."
+            )
 
-models = {
-    "rf": {"estimator": RandomForestClassifier(n_estimators=300, max_depth=30,
-                                               class_weight='balanced',
-                                               random_state=42),
-           "skip_smote": False},
-    "brf": {"estimator": BalancedRandomForestClassifier(n_estimators=300,
-                                                        max_depth=30,
-                                                        random_state=42),
-            "skip_smote": True},
-    "xgb": {"estimator": XGBClassifier(use_label_encoder=False,
-                                       eval_metric='logloss', random_state=42),
-            "skip_smote": False, "set_scale_pos_weight": True},
-    "svm": {"estimator": SVC(probability=True, class_weight='balanced',
-                             random_state=42), "skip_smote": False},
-    "logreg": {
-        "estimator": LogisticRegression(max_iter=2000, class_weight='balanced',
-                                        random_state=42), "skip_smote": False}
-}
-'''
+    # Compute permutation importance
+    result = permutation_importance(
+        used_estimator,
+        X,
+        y,
+        n_repeats=n_repeats,
+        random_state=random_state,
+        n_jobs=n_jobs,
+        scoring=scoring,
+    )
+
+    importances = result.importances_mean
+    std = result.importances_std
+
+    # Build DataFrame
+    df = pd.DataFrame({
+        "Feature": feature_names,
+        "Importance": importances,
+        "Std": std
+    })
+
+    # Sort and optionally select top-n
+    df = df.sort_values("Importance", ascending=False).reset_index(drop=True)
+    if n_top is not None and n_top > 0:
+        df_plot = df.head(n_top)
+    else:
+        df_plot = df
+
+    # Plot
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.get_figure()
+
+    y_pos = np.arange(len(df_plot))
+    # We want descending importance from top to bottom on the y-axis -> invert
+    features_plot = df_plot["Feature"].values[::-1]
+    importances_plot = df_plot["Importance"].values[::-1]
+    std_plot = df_plot["Std"].values[::-1]
+
+    ax.barh(y=features_plot, width=importances_plot, xerr=std_plot, capsize=4)
+    ax.set_xlabel("Permutation importance (mean)")
+    ax.set_ylabel("Feature")
+    if title is None:
+        title = f"Permutation feature importances (n_repeats={n_repeats})"
+    ax.set_title(title)
+    plt.tight_layout()
+
+    if return_df:
+        return df
+

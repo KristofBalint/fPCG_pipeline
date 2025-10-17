@@ -24,17 +24,7 @@ def remove_overlap(features_df, olap_rate):
     non_overlapping = non_overlapping.reset_index(drop=True)
     return non_overlapping
 
-def apply_category(non_overlapping):#still wrong
-    '''
-    :param non_overlapping: input dataframe
-    :return: dataframe with categorized metadata
-    '''
-    non_overlapping['Pregnancy term category'] = non_overlapping[
-        'Pregnancy term category'].apply(categorize_pregnancy_term)
-    non_overlapping['BMI category'] = non_overlapping['BMI category'].apply(
-        categorize_bmi)
-    non_overlapping['Age category'] = non_overlapping['Age category'].apply(
-        categorize_age)
+
 
 
 def plot_correlation_matrix(non_overlapping,column_renames,feats_to_drop, thresh=0.3
